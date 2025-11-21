@@ -1,17 +1,15 @@
 package org.opentdk.api.datastorage;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.opentdk.api.exception.DataContainerException;
 import org.opentdk.api.filter.Filter;
 import org.opentdk.api.filter.FilterRule;
 import org.opentdk.api.util.CSVUtil;
+import org.opentdk.api.util.StringUtil;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /**
@@ -27,7 +25,6 @@ public class TabularContainer implements SpecificContainer {
      * Represents a collection of rows where each row is an array of strings.
      * Used to store tabular data or structured information.
      */
-    @Getter
     private List<String[]> rows;
 
     /**
@@ -35,21 +32,18 @@ public class TabularContainer implements SpecificContainer {
      * or processing structured data. Each element in the array corresponds to
      * a specific header value.
      */
-    @Getter @Setter
     private String[] headers;
 
     /**
      * A map that associates header names with their respective integer values.
      * This can be used to map and retrieve specific header-related data based on header names as keys.
      */
-    @Getter
     private final Map<String, Integer> headerMap;
 
     /**
      * Represents the delimiter used to separate elements in a string.
      * The default value is set to a semicolon (";").
      */
-    @Setter
     private String delimiter = ";";
 
     /**
@@ -197,10 +191,15 @@ public class TabularContainer implements SpecificContainer {
         if (rows.isEmpty()) {
             return new ArrayList<>();
         }
-        Predicate<String[]> predicate = row -> checkValuesFilter(row, filter);
-        return rows.stream().filter(predicate).toList();
+        List<String[]> ret = new ArrayList<>();
+        for(String[] row : rows) {
+            if(checkValuesFilter(row, filter)) {
+                ret.add(row);
+            }
+        }
+        return ret;
     }
-
+    
     public List<String[]> getRows(String[] outHeaders, Filter filter) {
         if (rows.isEmpty()) {
             return new ArrayList<>();
@@ -301,7 +300,10 @@ public class TabularContainer implements SpecificContainer {
      * @return a list of strings containing the values from the specified column, filtered by the given criteria
      */
     public List<String> getColumn(String columnHeader, Filter filter) {
-        List<String[]> filteredRows = new ArrayList<>(getRows(filter));
+        List<String[]> filteredRows = getRows(filter);
+        if(filteredRows == null || filteredRows.isEmpty()) {
+        	return new ArrayList<>();
+        }
         filteredRows.addFirst(headers);
         List<String> ret = CSVUtil.getColumn(filteredRows, columnHeader);
         ret.removeFirst();
@@ -312,7 +314,9 @@ public class TabularContainer implements SpecificContainer {
     	rows.addFirst(headers);
         List<String[]> filteredRows = CSVUtil.filterData(rows, filterColumn, filterValue);
         rows.removeFirst();
-
+        if(filteredRows == null) {
+        	return null;
+        }
         filteredRows.addFirst(headers);
         List<String> ret = CSVUtil.getColumn(filteredRows, columnHeader);
         ret.removeFirst();
@@ -527,7 +531,12 @@ public class TabularContainer implements SpecificContainer {
                     }
                 }
                 // check values against the filter rules
-                returnCode = fr.checkValue(values[headerMap.get(fr.getHeaderName())]);
+                try {
+                    returnCode = fr.checkValue(values[headerMap.get(fr.getHeaderName())]);
+                } catch(ArrayIndexOutOfBoundsException e) {
+                    // Empty value in this row
+                    continue;
+                }
                 if (!returnCode) {
                     // skip check and return false, in case that one of the rules fails
                     break;
@@ -545,4 +554,39 @@ public class TabularContainer implements SpecificContainer {
 			headerIndex++;
 		}
 	}
+
+//    public void replaceUmlauts() {
+//        rows = StringUtil.replaceUmlauts(rows);
+//    }
+
+    public List<String[]> getRows() {
+        return rows;
+    }
+
+	public void setRows(List<String[]> rows) {
+		this.rows = rows;
+	}
+
+	public String[] getHeaders() {
+		return headers;
+	}
+
+    public Map<String, Integer> getHeaderMap() {
+        return headerMap;
+    }
+
+    public String getDelimiter() {
+        return delimiter;
+    }
+
+    public void setDelimiter(String delimiter) {
+        this.delimiter = delimiter;
+    }
+
+    public void setHeaders(String[] headers) {
+        if(headerMap.isEmpty()) {
+            initHeaders(headers);
+        }
+        this.headers = headers;
+    }
 }

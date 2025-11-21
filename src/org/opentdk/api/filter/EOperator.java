@@ -1,8 +1,5 @@
 package org.opentdk.api.filter;
 
-import lombok.Getter;
-
-@Getter
 public enum EOperator {
 
     CONTAINS("CONTAINS", "like"),
@@ -37,4 +34,12 @@ public enum EOperator {
         this.paramName = paramName;
         this.dVal = dVal;
     }
+
+	public String getParamName() {
+		return paramName;
+	}
+
+	public String getdVal() {
+		return dVal;
+	}
 }

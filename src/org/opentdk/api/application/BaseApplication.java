@@ -43,35 +43,31 @@ import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.logging.*;
 
+@Getter
 public abstract class BaseApplication {
     /**
      * Logger for the whole application.
      */
-    @Getter
     private Logger logger;
     /**
      * File for the {@link #logger}.
      */
     private Path logFile = Paths.get("logs" + File.separator + getClass().getSimpleName() + ".log");
     /**
-     * True: Log file gets written, false: No logging at all.
+     * True: Logfile gets written, false: No logging at all.
      */
-    @Getter
     private boolean logEnabled = true;
     /**
      * Storage object for all specific application settings.
      */
-    @Getter
     private AppSettings settings;
     /**
      * File for the {@link #settings}.
      */
-    @Getter
     private Path settingsFile = Paths.get("conf" + File.separator + getClass().getSimpleName() + ".json");
     /**
      * Storage object for all main application settings.
      */
-    @Getter
     private Properties properties;
 
     /**
@@ -131,9 +127,11 @@ public abstract class BaseApplication {
     public AppSettings initSettings(Class<? extends AppSettings> settingsClass) throws IOException {
     	if(properties.containsKey("settings")) {
             settingsFile = Paths.get(properties.getProperty("settings"));
-            logger.log(Level.INFO, "Settings file argument is set ==> " + settingsFile.toString());
+            logger.log(Level.INFO, "Settings file argument is set ==> " + settingsFile);
+        } else {
+            Files.createDirectories(settingsFile.getParent());
+            settingsFile = Paths.get(settingsFile.getParent().toString(), settingsClass.getSimpleName() + ".json");
         }
-        Files.createDirectories(settingsFile.getParent());
         if(Files.notExists(settingsFile)) {
             logger.log(Level.INFO, "Settings file does not exist and gets created ==> " + settingsFile.toString());
             Files.createFile(settingsFile);
@@ -185,5 +183,4 @@ public abstract class BaseApplication {
             logger.severe(e.getMessage());
         }
     }
-
 }

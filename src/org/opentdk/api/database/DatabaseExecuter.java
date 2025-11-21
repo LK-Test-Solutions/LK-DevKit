@@ -17,17 +17,22 @@ import java.util.List;
 import org.opentdk.api.datastorage.DataContainer;
 import org.opentdk.api.datastorage.EContainerFormat;
 
-
 /**
- * The DatabaseExecuter class provides methods to execute SQL statements and
- * handle database interactions. It supports executing SELECT, INSERT, and
- * general SQL statements as well as retrieving results in various formats.
- * <br>This class assumes the connection to the database is already established
- * and provided during instantiation.
- * <br>The class includes utility methods for executing queries, storing results
- * in memory or files, and managing SQL statements.
- *
+ * This class provides SQL statement execution methods. Usage example:
+ * 
+ * <pre>
+ * DatabaseExecuter executer = new DatabaseExecuter(CON);
+ * executer.executeInsert(SQL);
+ * </pre>
+ * 
+ * Where <code>CON</code> is an initialized {@link java.sql.Connection} object
+ * and <code>SQL</code> is a valid SQL statement string. The class itself has to
+ * be initialized once and the execution methods can be called several times.
+ * <br>
+ * <br>
+ * 
  * @author FME (LK Test Solutions)
+ *
  */
 public final class DatabaseExecuter {
 

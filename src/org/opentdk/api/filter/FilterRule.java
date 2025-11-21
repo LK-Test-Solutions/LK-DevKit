@@ -1,10 +1,7 @@
 package org.opentdk.api.filter;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.opentdk.api.util.DateUtil;
 
-import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -26,45 +23,37 @@ public class FilterRule {
     /**
      * Defines the name of the sequence, where the rules for specified value(s) will be checked. A sequence can be a column or row.
      */
-    @Getter
     private String headerName;
 
     /**
      * Defines the value, used by check operation of the rule.
      */
-    @Getter
     private String value;
 
     /**
      * An array with multiple values, used by check operation of the rule.
      */
-    @Getter
     private String[] values;
 
     /**
      * The operator used by check operation for the defined value of the rule.
      */
-    @Getter
     private EOperator filterOperator;
 
     /**
      * The operator used to concatenate the rule with other rules of this filter instance.
      */
-    @Getter
     private EOperator ruleConcatenationOperator;
 
     /**
      * The complete rule including {@link #ruleConcatenationOperator}, {@link #headerName}, {@link #filterOperator} and {@link #value}.
      * <br> e.g. "and company = 'LK Test Solutions GmbH'"
      */
-    @Getter
-    @Setter
     private String ruleString;
 
     /**
      * See {@link ERuleFormat}
      */
-    @Setter
     private ERuleFormat ruleFormat = ERuleFormat.STRING;
 
     /**
@@ -74,7 +63,7 @@ public class FilterRule {
      * @param ruleStr complete rule as string
      */
     public FilterRule(String ruleStr) {
-        setRuleString(ruleStr);
+        this.ruleString = ruleStr;
         if (ruleStr.trim().toUpperCase().startsWith("AND")) {
             ruleConcatenationOperator = EOperator.AND;
         } else if (ruleStr.trim().toUpperCase().startsWith("OR")) {
@@ -469,5 +458,33 @@ public class FilterRule {
         Matcher match = pat.matcher(val);
         return match.matches();
     }
+
+	public String getHeaderName() {
+		return headerName;
+	}
+
+	public String getValue() {
+		return value;
+	}
+
+	public String[] getValues() {
+		return values;
+	}
+
+	public EOperator getFilterOperator() {
+		return filterOperator;
+	}
+
+	public EOperator getRuleConcatenationOperator() {
+		return ruleConcatenationOperator;
+	}
+
+	public String getRuleString() {
+		return ruleString;
+	}
+
+	public ERuleFormat getRuleFormat() {
+		return ruleFormat;
+	}
 
 }
