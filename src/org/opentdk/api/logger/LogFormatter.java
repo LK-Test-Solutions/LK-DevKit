@@ -3,22 +3,11 @@ package org.opentdk.api.logger;
 import java.util.logging.LogRecord;
 import java.util.logging.SimpleFormatter;
 
-
 /**
- * Custom log formatter that extends {@link SimpleFormatter} to provide a consistent and
- * structured format for log messages. The formatter outputs log entries in the following structure:
- * [timestamp] [log level] logger name: message
- * <p>
- * Example formatted log entry:
- * [2025-01-01 12:00:00] [SEVERE] logs/application.log: Invalid program parameter
- * <p>
- * The format includes:
- * - Timestamp of the log entry in ISO 8601 date and time format (yyyy-MM-dd HH:mm:ss).
- * - Log level (e.g., SEVERE, INFO, WARNING).
- * - Name of the logger that generated the log entry.
- * - The actual log message.
- * <p>
- * This implementation overrides the default formatting behavior of {@link SimpleFormatter}.
+ * Class to have a custom log record as output. Has to be committed as <code>new LogFormatter()</code> to the handler(s) of the logger instance.
+ * 
+ * @author FME (LK Test Solutions)
+ *
  */
 public class LogFormatter extends SimpleFormatter {
 	@Override

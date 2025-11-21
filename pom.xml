@@ -3,7 +3,7 @@
 	<!-- Coordinates -->
 	<groupId>org.opentdk</groupId>
 	<artifactId>opentdk-api</artifactId>
-	<version>2025-08-06</version>
+	<version>2025-11-21</version>
 	<properties>
 		<maven.compiler.source>21</maven.compiler.source>
 		<maven.compiler.target>21</maven.compiler.target>
@@ -39,7 +39,7 @@
 			<organizationUrl>https://www.lk-test.de/</organizationUrl>
 		</developer>
 	</developers>
-	<!-- Distribution managment and authentication -->
+	<!-- Distribution management and authentication -->
 	<distributionManagement>
 		<snapshotRepository>
 			<id>ossrh</id>
@@ -56,36 +56,6 @@
 		<developerConnection>scm:git:ssh://github.com:LK-Test-Solutions/OpenTDK.git</developerConnection>
 		<url>https://github.com/LK-Test-Solutions/OpenTDK/tree/main</url>
 	</scm>
-	<!-- Sign artifact -->	
-	<profiles>
-		<profile>
-			<id>ci-cd</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-gpg-plugin</artifactId>
-						<version>1.6</version>
-						<executions>
-							<execution>
-								<id>sign-artifacts</id>
-								<phase>verify</phase>
-								<goals>
-									<goal>sign</goal>
-								</goals>
-								<configuration>
-									<gpgArguments>
-										<arg>--pinentry-mode</arg>
-										<arg>loopback</arg>
-									</gpgArguments>
-								</configuration>
-							</execution>
-						</executions>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-	</profiles>
 	<!-- Build Properties -->
 	<build>
 		<sourceDirectory>src</sourceDirectory>
@@ -193,7 +163,7 @@
 		<dependency>
 			<groupId>com.opencsv</groupId>
 			<artifactId>opencsv</artifactId>
-			<version>5.8</version> <!-- Aktuellste Version prüfen -->
+			<version>5.8</version>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/com.google.code.gson/gson -->
 		<dependency>
