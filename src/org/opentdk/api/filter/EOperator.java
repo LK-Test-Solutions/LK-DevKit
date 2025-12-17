@@ -1,5 +1,7 @@
 package org.opentdk.api.filter;
 
+import lombok.Getter;
+
 public enum EOperator {
 
     CONTAINS("CONTAINS", "like"),
@@ -27,19 +29,13 @@ public enum EOperator {
     IN("IN", "IN"),
     BETWEEN("BETWEEN", "BETWEEN");
 
+    @Getter
     private final String paramName;
+    @Getter
     private final String dVal;
 
     EOperator(String paramName, String dVal) {
         this.paramName = paramName;
         this.dVal = dVal;
     }
-
-	public String getParamName() {
-		return paramName;
-	}
-
-	public String getdVal() {
-		return dVal;
-	}
 }

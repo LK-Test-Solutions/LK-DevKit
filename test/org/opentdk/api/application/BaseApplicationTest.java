@@ -17,7 +17,7 @@ public class BaseApplicationTest {
         } catch (IOException e) {
             app.getLogger().log(Level.SEVERE, e.getMessage());
         }
-        assert app.getProperties() != null;
+        assert app.getProperties().size() == 5;
         assert app.getLogger() != null;
         assert app.getSettingsFile() != null;
         assert app.isLogEnabled();

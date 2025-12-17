@@ -54,7 +54,7 @@ public class CSVUtil {
 		// Find the index in the column
 		int columnIndex = -1;
 		if (!data.isEmpty()) {
-			String[] header = data.getFirst();
+			String[] header = data.get(0);
 			for (int i = 0; i < header.length; i++) {
 				if (header[i].equals(columnName)) {
 					columnIndex = i;
@@ -121,7 +121,7 @@ public class CSVUtil {
 		int columnIndex = -1;
 		if (!data.isEmpty()) {
 			// Assuming the column names are in the first row
-			String[] header = data.getFirst();
+			String[] header = data.get(0);
 			for (int i = 0; i < header.length; i++) {
 				if (header[i].equalsIgnoreCase(columnName)) {
 					columnIndex = i;
@@ -192,8 +192,8 @@ public class CSVUtil {
 	public static void updateRow(List<String[]> data, String updateColumn, String oldValue, String newValue) {
 		// Assume that the first row contains the headers
 		int columnIndex = -1;
-		for (int i = 0; i < data.getFirst().length; i++) {
-			if (data.getFirst()[i].equalsIgnoreCase(updateColumn)) {
+		for (int i = 0; i < data.get(0).length; i++) {
+			if (data.get(0)[i].equalsIgnoreCase(updateColumn)) {
 				columnIndex = i;
 				break;
 			}
