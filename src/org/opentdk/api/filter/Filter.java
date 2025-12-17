@@ -87,7 +87,7 @@ public class Filter {
 		addFilterRule(headerName, values, mode, ERuleFormat.STRING);
 	}
 
-	public void addFilterRule(String headerName, String value, EOperator mode, FilterRule.ERuleFormat ruleFormat) {
+	public void addFilterRule(String headerName, String value, EOperator mode, ERuleFormat ruleFormat) {
 		addFilterRule(headerName, new String[] { value }, mode, ruleFormat);
 	}
 
@@ -107,9 +107,9 @@ public class Filter {
 	 * @param values     Array with multiple values that will be checked by the operation.
 	 * @param mode       The operator that defines the filter operation for the value e.g.
 	 *                   EOperator.EQUALS, EOperator.STARTS_WITH etc.
-	 * @param ruleFormat See {@link FilterRule.ERuleFormat}
+	 * @param ruleFormat See {@link ERuleFormat}
 	 */
-	public void addFilterRule(String headerName, String[] values, EOperator mode, FilterRule.ERuleFormat ruleFormat) {
+	public void addFilterRule(String headerName, String[] values, EOperator mode, ERuleFormat ruleFormat) {
 		if (plausibleHeaders.isEmpty() || checkHeader(headerName)) {
 			rules.add(new FilterRule(headerName, values, mode, ruleFormat));
 		}
@@ -123,11 +123,11 @@ public class Filter {
 		addFilterRule(headerName, values, mode, concat, ERuleFormat.STRING);
 	}
 
-	public void addFilterRule(String headerName, String value, EOperator mode, EOperator concat, FilterRule.ERuleFormat ruleFormat) {
+	public void addFilterRule(String headerName, String value, EOperator mode, EOperator concat, ERuleFormat ruleFormat) {
 		addFilterRule(headerName, new String[] { value }, mode, concat, ruleFormat);
 	}
 
-	public void addFilterRule(String headerName, String[] values, EOperator mode, EOperator concat, FilterRule.ERuleFormat ruleFormat) {
+	public void addFilterRule(String headerName, String[] values, EOperator mode, EOperator concat, ERuleFormat ruleFormat) {
 		if (plausibleHeaders.isEmpty() || checkHeader(headerName)) {
 			rules.add(new FilterRule(headerName, values, mode, concat, ruleFormat));
 		}

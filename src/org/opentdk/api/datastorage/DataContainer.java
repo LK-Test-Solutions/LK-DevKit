@@ -1,5 +1,6 @@
 package org.opentdk.api.datastorage;
 
+import lombok.Getter;
 import org.opentdk.api.exception.DataContainerException;
 import org.opentdk.api.filter.Filter;
 import org.xml.sax.InputSource;
@@ -7,7 +8,10 @@ import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParserFactory;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,6 +23,7 @@ import java.nio.file.Paths;
  * interacting with data from various sources like files, streams, or external inputs. The class
  * offers factory methods for creation and utility methods for data processing and manipulation.
  */
+@Getter
 public class DataContainer implements SpecificContainer {
 
     /**
@@ -56,7 +61,7 @@ public class DataContainer implements SpecificContainer {
      * This field is initialized with a new instance of the Filter class and is accessible or
      * modifiable through the provided getter and setter methods.
      */
-    private Filter filter = new Filter();
+    private final Filter filter = new Filter();
 
     /**
      * Represents the format of the container used for data handling. The {@code containerFormat}
@@ -124,10 +129,17 @@ public class DataContainer implements SpecificContainer {
      *             provided, an IllegalStateException is thrown.
      */
     private DataContainer(EContainerFormat type) {
-        containerFormat = type;
-        switch (type) {
-            case CSV -> instance = TabularContainer.newInstance();
-            default -> throw new IllegalStateException("Unexpected value: " + type);
+        if(type == EContainerFormat.CSV) {
+            containerFormat = EContainerFormat.CSV;
+        } else if(type == EContainerFormat.XML) {
+            containerFormat = EContainerFormat.XML;
+        } else {
+            throw new IllegalStateException("Unexpected value: " + type);
+        }
+        try {
+            instance = adaptContainer();
+        } catch (IOException e) {
+            throw new DataContainerException(e);
         }
     }
 
@@ -213,9 +225,12 @@ public class DataContainer implements SpecificContainer {
      *                                issues such as parser configuration, invalid content, etc.
      */
     private SpecificContainer adaptContainer() throws IOException {
-        return switch (detectDataFormat()) {
-            case CSV -> TabularContainer.newInstance();
-        };
+        if(detectDataFormat() == EContainerFormat.CSV) {
+            return TabularContainer.newInstance();
+        } else if(detectDataFormat() == EContainerFormat.XML) {
+            return XMLDataContainer.newInstance();
+        }
+        throw new DataContainerException("Unsupported container format: " + containerFormat);
     }
 
     /**
@@ -234,6 +249,8 @@ public class DataContainer implements SpecificContainer {
                     containerFormat = EContainerFormat.CSV;
                 } else if (fileName.endsWith(".csv")) {
                     containerFormat = EContainerFormat.CSV;
+                } else  if(fileName.endsWith(".xml")) {
+                    containerFormat = EContainerFormat.XML;
                 }
             }
         }
@@ -254,6 +271,14 @@ public class DataContainer implements SpecificContainer {
             return (TabularContainer) instance;
         } else {
             throw new NullPointerException("TabularContainer not initialized");
+        }
+    }
+
+    public XMLDataContainer xmlInstance() {
+        if (instance instanceof XMLDataContainer) {
+            return (XMLDataContainer) instance;
+        } else {
+            throw new NullPointerException("XMLDataContainer not initialized");
         }
     }
 
@@ -278,30 +303,6 @@ public class DataContainer implements SpecificContainer {
         if (inputFile != null) {
             Files.createFile(inputFile);
         }
-    }
-
-    /**
-     * Validates whether the provided string is well-formed XML.
-     *
-     * @param inString the string to be validated as XML
-     * @return true if the string is valid XML, false otherwise
-     */
-    @Deprecated
-    public Boolean validateXMLString(String inString) {
-        try {
-            InputStream inStream = new ByteArrayInputStream(inString.getBytes(StandardCharsets.UTF_8));
-            SAXParserFactory.newInstance().newSAXParser().getXMLReader().parse(new InputSource(inStream));
-        } catch (IOException e) {
-            // log.warn("Invalid input used for XML parser");
-            return false;
-        } catch (ParserConfigurationException e) {
-            // log.warn("Probably non-supported feature used for the XML processor");
-            return false;
-        } catch (SAXException e) {
-            // log.warn("A DOCTYPE was passed into the XML document");
-            return false;
-        }
-        return true;
     }
 
     // --------------------------------------------------------------------
@@ -362,25 +363,5 @@ public class DataContainer implements SpecificContainer {
     public void writeData(Path outputFile) throws IOException {
         instance.writeData(outputFile);
     }
-
-
-	public Path getInputFile() {
-		return inputFile;
-	}
-
-
-	public InputStream getInputStream() {
-		return inputStream;
-	}
-
-
-	public Filter getFilter() {
-		return filter;
-	}
-
-
-	public EContainerFormat getContainerFormat() {
-		return containerFormat;
-	}
 
 }

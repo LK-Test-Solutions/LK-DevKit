@@ -31,6 +31,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import lombok.Getter;
+import lombok.Setter;
 import org.opentdk.api.logger.LogArchiver;
 import org.opentdk.api.logger.LogFactory;
 
@@ -48,10 +49,11 @@ public abstract class BaseApplication {
     /**
      * Logger for the whole application.
      */
-    private Logger logger;
+    protected Logger logger;
     /**
      * File for the {@link #logger}.
      */
+    @Setter
     private Path logFile = Paths.get("logs" + File.separator + getClass().getSimpleName() + ".log");
     /**
      * True: Logfile gets written, false: No logging at all.
@@ -64,11 +66,12 @@ public abstract class BaseApplication {
     /**
      * File for the {@link #settings}.
      */
-    private Path settingsFile = Paths.get("conf" + File.separator + getClass().getSimpleName() + ".json");
+    @Setter
+    private Path settingsFile;
     /**
-     * Storage object for all main application settings.
+     * Storage object for all main application settings / program parameter.
      */
-    private Properties properties;
+    private final Properties properties;
 
     /**
      * Entry point of the application. The program parameter get passed as "=" separated key value pairs.
@@ -79,9 +82,11 @@ public abstract class BaseApplication {
      * </pre>
      *
      * Where <b>InheritedApp</b> inherits from {@link BaseApplication}. The minus prefix is optional.
+     * When the parameter has no "=" it simply gets added with index.
      */
     public BaseApplication(String[] args) {
         properties = new Properties();
+        int index = 0;
         for (String arg : args) {
             if(arg.contains("=")) {
                 String argKey = arg.split("=")[0];
@@ -90,7 +95,10 @@ public abstract class BaseApplication {
                     argKey = argKey.replace("-", "");
                 }
                 properties.put(argKey, value);
+            } else {
+                properties.put(String.valueOf(index), arg);
             }
+            index++;
         }
     }
 
@@ -100,17 +108,21 @@ public abstract class BaseApplication {
      * by using the 'logEnabled' program parameter.
      */
     public void initLogger() {
+        initLogger(true);
+    }
+
+    public void initLogger(boolean writeToFile) {
         if(properties.containsKey("logFile")) {
             logFile = Paths.get(properties.getProperty("logFile"));
         }
         if(properties.containsKey("logEnabled")) {
-            logEnabled = Boolean.parseBoolean(properties.getProperty("logEnabled"));
+            writeToFile = Boolean.parseBoolean(properties.getProperty("logEnabled"));
         }
         String traceLevel = "INFO";
         if(properties.containsKey("traceLevel")) {
-        	traceLevel = properties.getProperty("traceLevel");
+            traceLevel = properties.getProperty("traceLevel");
         }
-        logger = LogFactory.buildLogger(logFile, traceLevel, logEnabled);      
+        logger = LogFactory.buildLogger(logFile, traceLevel, writeToFile);
     }
 
     /**
@@ -125,34 +137,31 @@ public abstract class BaseApplication {
      * Works like {@link #initSettings()} but with the possibility to use a custom settings class that inherits from {@link AppSettings}.
      */
     public AppSettings initSettings(Class<? extends AppSettings> settingsClass) throws IOException {
-    	if(properties.containsKey("settings")) {
+        // Settings file name was passed via program parameter (always wins)
+        if(properties.containsKey("settings")) {
             settingsFile = Paths.get(properties.getProperty("settings"));
-            logger.log(Level.INFO, "Settings file argument is set ==> " + settingsFile);
-        } else {
-            Files.createDirectories(settingsFile.getParent());
+        }
+        // No program parameter settings exists and setSettingsFile was not called (default gets used)
+        if(settingsFile == null) {
+            Files.createDirectories(Paths.get("conf"));
             settingsFile = Paths.get(settingsFile.getParent().toString(), settingsClass.getSimpleName() + ".json");
         }
+
         if(Files.notExists(settingsFile)) {
-            logger.log(Level.INFO, "Settings file does not exist and gets created ==> " + settingsFile.toString());
             Files.createFile(settingsFile);
             Files.writeString(settingsFile, "{}");
         }
         try (FileReader reader = new FileReader(settingsFile.toFile())) {
-        	settings = new GsonBuilder().setPrettyPrinting().create().fromJson(reader, settingsClass);
-            logger.log(Level.INFO, "Settings file loaded into class ==> " + settingsClass.getSimpleName());
+            settings = new GsonBuilder().setPrettyPrinting().create().fromJson(reader, settingsClass);
         }
         // Overwrite settings with program parameter if required
         mergeSettingsAndProps();
-        
-        long logSize = settings.getLogFileSize();
-		int keepAge = settings.getLogKeepAge();
-		int archiveSize = settings.getLogArchiveSize();
-		try {
-			LogArchiver.archiveIfNecessary(logFile, logSize, keepAge, archiveSize);
-		} catch (IOException e) {
-			logger.log(Level.WARNING, "Log archive routine failed");
-		}
-		return settings;
+
+        return settings;
+    }
+
+    public void archiveIfNecessary() throws IOException {
+        LogArchiver.archiveIfNecessary(getLogFile(), settings.getLogFileSize(), settings.getLogKeepAge(), settings.getLogArchiveSize());
     }
 
     private void mergeSettingsAndProps() {

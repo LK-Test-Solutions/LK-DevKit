@@ -1,12 +1,16 @@
 package org.opentdk.api.datastorage;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.opentdk.api.exception.DataContainerException;
 import org.opentdk.api.filter.Filter;
 import org.opentdk.api.filter.FilterRule;
 import org.opentdk.api.util.CSVUtil;
-import org.opentdk.api.util.StringUtil;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.*;
@@ -19,12 +23,14 @@ import java.util.stream.Stream;
  *
  * @author FME (LK Test Solutions)
  */
+@Getter
 public class TabularContainer implements SpecificContainer {
 
     /**
      * Represents a collection of rows where each row is an array of strings.
      * Used to store tabular data or structured information.
      */
+    @Setter
     private List<String[]> rows;
 
     /**
@@ -44,6 +50,7 @@ public class TabularContainer implements SpecificContainer {
      * Represents the delimiter used to separate elements in a string.
      * The default value is set to a semicolon (";").
      */
+    @Setter
     private String delimiter = ";";
 
     /**
@@ -90,8 +97,8 @@ public class TabularContainer implements SpecificContainer {
     @Override
     public void readData(Path sourceFile) throws IOException {
         rows = CSVUtil.readFile(sourceFile.toFile(), delimiter, StandardCharsets.UTF_8);
-        headers = rows.getFirst();
-        rows.removeFirst(); // Headers are stored and can be removed from the rows list
+        headers = rows.get(0);
+        rows.remove(0); // Headers are stored and can be removed from the rows list
         for(int i = 0; i < headers.length; i++) {
             headerMap.put(headers[i], i);
         }
@@ -116,7 +123,8 @@ public class TabularContainer implements SpecificContainer {
         if (stream != null) {
             InputStreamReader inputStreamReader = new InputStreamReader(stream);
             Stream<String> streamOfString = new BufferedReader(inputStreamReader).lines();
-            content = streamOfString.toList();
+            content = new ArrayList<>();
+            streamOfString.forEach(content::add);
 
             streamOfString.close();
             inputStreamReader.close();
@@ -125,8 +133,8 @@ public class TabularContainer implements SpecificContainer {
             for(String row : content) {
                 rows.add(row.split(delimiter));
             }
-            headers = rows.getFirst();
-            rows.removeFirst();
+            headers = rows.get(0);
+            rows.remove(0);
         }
     }
 
@@ -282,11 +290,11 @@ public class TabularContainer implements SpecificContainer {
         if (rows.isEmpty()) {
             return new ArrayList<>();
         }
-        rows.addFirst(headers);
+        rows.add(0, headers);
         List<String> ret = CSVUtil.getColumn(rows, columnHeader);
-        rows.removeFirst();
+        rows.remove(0);
         if(!ret.isEmpty()) {
-        	ret.removeFirst(); // Without header
+        	ret.remove(0); // Without header
         }
         return ret;
     }
@@ -304,22 +312,22 @@ public class TabularContainer implements SpecificContainer {
         if(filteredRows == null || filteredRows.isEmpty()) {
         	return new ArrayList<>();
         }
-        filteredRows.addFirst(headers);
+        filteredRows.add(0, headers);
         List<String> ret = CSVUtil.getColumn(filteredRows, columnHeader);
-        ret.removeFirst();
+        ret.remove(0);
         return ret;
     }
     
     public List<String> getColumn(String columnHeader, String filterColumn, String filterValue) {
-    	rows.addFirst(headers);
+    	rows.add(0, headers);
         List<String[]> filteredRows = CSVUtil.filterData(rows, filterColumn, filterValue);
-        rows.removeFirst();
+        rows.remove(0);
         if(filteredRows == null) {
         	return null;
         }
-        filteredRows.addFirst(headers);
+        filteredRows.add(headers);
         List<String> ret = CSVUtil.getColumn(filteredRows, columnHeader);
-        ret.removeFirst();
+        ret.remove(0);
         return ret;
     }
 
@@ -362,9 +370,9 @@ public class TabularContainer implements SpecificContainer {
      *                    column (if it already exists) instead of creating a new one.
      */
     public void addColumn(String column, boolean useExisting) {
-        rows.addFirst(headers);
+        rows.add(0, headers);
         CSVUtil.addColumn(rows, headerMap, column, useExisting);
-        rows.removeFirst();
+        rows.remove(0);
         mergeHeaderMapWithHeader();
     }
 
@@ -377,9 +385,9 @@ public class TabularContainer implements SpecificContainer {
      * @param newValue The new value to replace the old value in the specified column.
      */
     public void setValue(String updateColumn, String oldValue, String newValue) {
-        rows.addFirst(headers);
+        rows.add(0, headers);
         CSVUtil.updateRow(rows, updateColumn, oldValue, newValue);
-        rows.removeFirst();
+        rows.remove(0);
     }
 
     /**
@@ -390,7 +398,7 @@ public class TabularContainer implements SpecificContainer {
      * @throws DataContainerException If the length of updateRow does not match the length of the row being updated.
      */
     public void setRow(String[] updateRow, Filter filter) {
-        rows.addFirst(headers);
+        rows.add(0, headers);
         String[] targetRow = getRow(filter);
         if(targetRow.length != updateRow.length) {
             throw new DataContainerException("Old row and new row do not have the same length in setRow");
@@ -398,7 +406,7 @@ public class TabularContainer implements SpecificContainer {
         for(int i = 0; i < targetRow.length; i++) {
             CSVUtil.updateRow(rows, headers[i], targetRow[i], updateRow[i]);
         }
-        rows.removeFirst();
+        rows.remove(0);
     }
 
     /**
@@ -409,7 +417,7 @@ public class TabularContainer implements SpecificContainer {
      * @throws DataContainerException If the length of updateRow does not match the length of the row being updated.
      */
     public void setRow(int index, String[] updateRow) {
-        rows.addFirst(headers);
+        rows.add(0, headers);
         String[] targetRow = getRow(index);
         if(targetRow.length != updateRow.length) {
             throw new DataContainerException("Old row and new row do not have the same length in setRow");
@@ -417,7 +425,7 @@ public class TabularContainer implements SpecificContainer {
         for(int i = 0; i < targetRow.length; i++) {
             CSVUtil.updateRow(rows, headers[i], targetRow[i], updateRow[i]);
         }
-        rows.removeFirst();
+        rows.remove(0);
     }
 
     /**
@@ -497,13 +505,13 @@ public class TabularContainer implements SpecificContainer {
         StringBuilder indexBuffer = new StringBuilder();
         for (int i = 0; i < rows.size(); i++) {
             if (checkValuesFilter(rows.get(i), filter)) {
-                if (!indexBuffer.isEmpty()) {
+                if (indexBuffer.length() > 0) {
                     indexBuffer.append(";");
                 }
                 indexBuffer.append(i);
             }
         }
-        if (!indexBuffer.isEmpty()) {
+        if (indexBuffer.length() > 0) {
             return Arrays.stream(indexBuffer.toString().split(";")).mapToInt(Integer::parseInt).toArray();
         } else {
             return new int[] {};
@@ -555,38 +563,14 @@ public class TabularContainer implements SpecificContainer {
 		}
 	}
 
-//    public void replaceUmlauts() {
-//        rows = StringUtil.replaceUmlauts(rows);
-//    }
-
-    public List<String[]> getRows() {
-        return rows;
-    }
-
-	public void setRows(List<String[]> rows) {
-		this.rows = rows;
-	}
-
-	public String[] getHeaders() {
-		return headers;
-	}
-
-    public Map<String, Integer> getHeaderMap() {
-        return headerMap;
-    }
-
-    public String getDelimiter() {
-        return delimiter;
-    }
-
-    public void setDelimiter(String delimiter) {
-        this.delimiter = delimiter;
-    }
-
     public void setHeaders(String[] headers) {
         if(headerMap.isEmpty()) {
             initHeaders(headers);
         }
         this.headers = headers;
+    }
+
+    public int getRowCount() {
+        return rows.size();
     }
 }
