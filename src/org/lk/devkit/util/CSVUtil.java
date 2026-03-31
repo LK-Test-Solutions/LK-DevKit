@@ -25,18 +25,18 @@ public class CSVUtil {
 	 * @return a list of string arrays, where each array represents a line in the file split by the delimiter
 	 * @throws IOException if an I/O error occurs while reading the file
 	 */
-	public static List<String[]> readFile(File filePath, String delimiter, Charset encoding) throws IOException {
-		List<String[]> data = new ArrayList<>();
+    public static List<String[]> readFile(File filePath, String delimiter, Charset encoding) throws IOException {
+        List<String[]> data = new ArrayList<>();
 
-		try (BufferedReader br = new BufferedReader(new FileReader(filePath, encoding))) {
-			String line;
-			while ((line = br.readLine()) != null) {
-				String[] values = line.split(delimiter);
-				data.add(values);
-			}
-		}
-		return data;
-	}
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath, encoding))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] values = line.split(delimiter, -1);
+                data.add(values);
+            }
+        }
+        return data;
+    }
 
 	/**
 	 * Filters the provided tabular data based on a specific column and a filter value.
@@ -209,6 +209,30 @@ public class CSVUtil {
 			}
 		}
 	}
+
+    /**
+     * Updates a specific value in the tabular data by matching a column and a target index.
+     * Updates the first occurrence of the matching row in the specified column.
+     *
+     * @param data the list of string arrays where each array represents a row of tabular data
+     * @param updateColumn the name of the column in which the value needs to be updated
+     * @param index the row index within the specified column
+     * @param newValue the new value to be set in place of the old value
+     */
+    public static void updateRow(List<String[]> data, String updateColumn, int index, String newValue) {
+        // Assume that the first row contains the headers
+        int columnIndex = -1;
+        for (int i = 0; i < data.get(0).length; i++) {
+            if (data.get(0)[i].equalsIgnoreCase(updateColumn)) {
+                columnIndex = i;
+                break;
+            }
+        }
+        // If a column could be detected, update the data
+        if (index >= 0 && index < data.size() && columnIndex != -1) {
+            data.get(index + 1)[columnIndex] = newValue;
+        }
+    }
 
 	/**
 	 * Converts a list of string arrays representing tabular data into a tab-separated string.

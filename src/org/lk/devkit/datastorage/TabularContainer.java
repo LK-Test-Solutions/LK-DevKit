@@ -391,6 +391,20 @@ public class TabularContainer implements SpecificContainer {
     }
 
     /**
+     * Sets the value at a specific row index in the specified column.
+     *
+     * @param updateColumn The name of the column where the value needs to be updated.
+     * @param index The row index (0-based) where the value should be set.
+     * @param newValue The new value to set at the specified row and column.
+     * @throws DataContainerException If the column header is not found or the row index is out of range.
+     */
+    public void setValue(String updateColumn, int index, String newValue) {
+        rows.add(0,headers);
+        CSVUtil.updateRow(rows, updateColumn, index, newValue);
+        rows.remove(0);
+    }
+
+    /**
      * Updates a row in the data container matching the specified filter with the provided new row data.
      *
      * @param updateRow The new row data to replace the existing row. The length of this array must match the length of the existing row being updated.
@@ -505,13 +519,13 @@ public class TabularContainer implements SpecificContainer {
         StringBuilder indexBuffer = new StringBuilder();
         for (int i = 0; i < rows.size(); i++) {
             if (checkValuesFilter(rows.get(i), filter)) {
-                if (indexBuffer.length() > 0) {
+                if (!indexBuffer.isEmpty()) {
                     indexBuffer.append(";");
                 }
                 indexBuffer.append(i);
             }
         }
-        if (indexBuffer.length() > 0) {
+        if (!indexBuffer.isEmpty()) {
             return Arrays.stream(indexBuffer.toString().split(";")).mapToInt(Integer::parseInt).toArray();
         } else {
             return new int[] {};

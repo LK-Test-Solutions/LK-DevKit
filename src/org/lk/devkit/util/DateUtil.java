@@ -170,6 +170,14 @@ public class DateUtil {
     }
 
     /**
+     * @param format pattern to add to the {@link #formats} list during runtime. Allows to take this format into account
+     *               when using DateUtil
+     */
+    public static void addPattern(String format) {
+        formats.add(format);
+    }
+
+    /**
      * @return all available formats of DateUtil as pipe separated string in brackets for regular expression checks.
      */
     public static String getAllFormatsAsRegex() {
@@ -185,11 +193,28 @@ public class DateUtil {
     }
 
     /**
-     * @param format pattern to add to the {@link #formats} list during runtime. Allows to take this format into account
-     *               when using DateUtil
+     * Retrieves the format pattern for a given date string by trying all available formats.
+     * For example, "2025-12-13" returns "yyyy-MM-dd".
+     *
+     * @param date The date string to analyze.
+     * @return The format pattern that matches the date string, or an empty string if no format matches.
      */
-    public static void addPattern(String format) {
-        formats.add(format);
+    public static String retrieveFormat(String date) {
+        for(String pattern : getAllFormats()) {
+            if(!pattern.contentEquals("D")) {
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
+                try {
+                    formatter.parse(date);
+                    // Additional check: the date length should match the pattern length
+                    if(date.length() == pattern.length()) {
+                        return pattern;
+                    }
+                } catch(DateTimeParseException e) {
+                    continue;
+                }
+            }
+        }
+        return "";
     }
 
     /**
@@ -224,15 +249,16 @@ public class DateUtil {
         ZonedDateTime first = retrieveZonedDateTime(retrieveTemporal(dateTime));
         ZonedDateTime second = retrieveZonedDateTime(retrieveTemporal(compareDateTime));
         // Ensure comparison between the correct instance types
-        if(type == ChronoUnit.NANOS || type == ChronoUnit.MICROS || type == ChronoUnit.MILLIS || type == ChronoUnit.SECONDS || type == ChronoUnit.MINUTES || type == ChronoUnit.HOURS || type == ChronoUnit.HALF_DAYS) {
-            first = first.toLocalDateTime().atZone(zoneId);
-            second = second.toLocalDateTime().atZone(zoneId);
-        } else if(type == ChronoUnit.DAYS || type == ChronoUnit.WEEKS || type == ChronoUnit.MONTHS || type == ChronoUnit.YEARS || type == ChronoUnit.DECADES || type == ChronoUnit.CENTURIES || type == ChronoUnit.MILLENNIA || type == ChronoUnit.ERAS) {
-            first = first.toLocalDate().atStartOfDay(zoneId);
-            second = second.toLocalDate().atStartOfDay(zoneId);
-
-        } else {
-            throw new IllegalArgumentException("Unexpected value: " + type);
+        switch(type) {
+            case NANOS, MICROS, MILLIS, SECONDS, MINUTES, HOURS, HALF_DAYS -> {
+                first = first.toLocalDateTime().atZone(zoneId);
+                second = second.toLocalDateTime().atZone(zoneId);
+            }
+            case DAYS, WEEKS, MONTHS, YEARS, DECADES, CENTURIES, MILLENNIA, ERAS -> {
+                first = first.toLocalDate().atStartOfDay(zoneId);
+                second = second.toLocalDate().atStartOfDay(zoneId);
+            }
+            default -> throw new IllegalArgumentException("Unexpected value: " + type);
         }
         return (int) Math.abs(type.between(first, second));
     }
@@ -480,13 +506,10 @@ public class DateUtil {
         if (age.contains("-")) {
             a_age = age.split("-");
         }
-
-        if(a_age.length == 1) {
-            outDate = "'" + get(-(Integer.parseInt(a_age[0]) * 365), format, ChronoUnit.DAYS) + "'";
-        } else if(a_age.length == 2) {
-            outDate = "'" + get(-(random.nextInt(Integer.parseInt(a_age[1]) * 365 - Integer.parseInt(a_age[0]) * 365) + Integer.parseInt(a_age[0]) * 365), format, ChronoUnit.DAYS) + "'";
-        } else if(a_age.length == 3) {
-            outDate = "'" + age + "'";
+        switch (a_age.length) {
+            case 1 -> outDate = "'" + get(-(Integer.parseInt(a_age[0]) * 365), format, ChronoUnit.DAYS) + "'";
+            case 2 -> outDate = "'" + get(-(random.nextInt(Integer.parseInt(a_age[1]) * 365 - Integer.parseInt(a_age[0]) * 365) + Integer.parseInt(a_age[0]) * 365), format, ChronoUnit.DAYS) + "'";
+            case 3 -> outDate = "'" + age + "'";
         }
         return outDate;
     }

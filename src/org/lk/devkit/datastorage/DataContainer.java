@@ -230,7 +230,10 @@ public class DataContainer implements SpecificContainer {
     /**
      * Detects the data format of an input source, which can either be an input stream or an input file.
      * The method analyzes the content of the input stream or the file extension to determine the data format.
-     * Supported formats include XML, JSON, YAML, and CSV.
+     * Supported formats include XML and CSV.
+     *
+     * For input files, the file extension is used. For input streams, the method reads the first non-whitespace
+     * character(s) to distinguish between XML and CSV. If  the stream starts with '{@literal }?xml}', the format is detected as XML. Otherwise, CSV is assumed.
      *
      * @return The detected data format as an {@link EContainerFormat}.
      * @throws IOException If an I/O error occurs while reading the input stream or accessing the input file.
@@ -245,6 +248,20 @@ public class DataContainer implements SpecificContainer {
                     containerFormat = EContainerFormat.CSV;
                 } else  if(fileName.endsWith(".xml")) {
                     containerFormat = EContainerFormat.XML;
+                }
+            }
+        } else if(inputStream != null) {
+            // Use BufferedInputStream to support mark/reset
+            inputStream.mark(256);
+            byte[] buffer = new byte[256];
+            int bytesRead = inputStream.read(buffer);
+            inputStream.reset();
+            if (bytesRead > 0) {
+                String start = new String(buffer, 0, bytesRead).trim();
+                if (start.startsWith("<?xml")) {
+                    containerFormat = EContainerFormat.XML;
+                } else {
+                    containerFormat = EContainerFormat.CSV;
                 }
             }
         }
@@ -283,6 +300,15 @@ public class DataContainer implements SpecificContainer {
      */
     public boolean isTabular() {
         return instance instanceof TabularContainer;
+    }
+
+    /**
+     * Determines if the current instance represents a XML data structure.
+     *
+     * @return true if the instance is of type XMLDataContainer, otherwise false
+     */
+    public boolean isTree() {
+        return instance instanceof XMLDataContainer;
     }
 
     /**

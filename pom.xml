@@ -13,8 +13,8 @@
 	<packaging>jar</packaging>
 	<!-- Name, description and URL -->
 	<name>${project.groupId}:${project.artifactId}</name>
-	<description>The Open Tool Development Kit provides packages and classes for easy implementation of Java tools or applications. Originally designed for test supporting software.</description>
-	<url>https://github.com/LK-Test-Solutions/OpenTDK</url>
+	<description>The LK Development Kit provides packages and classes for easy implementation of Java tools or applications. Originally designed for test supporting software.</description>
+	<url>https://github.com/LK-Test-Solutions/LK-DevKit</url>
 	<!-- License information -->
 	<licenses>
 		<license>
@@ -52,9 +52,9 @@
 	</distributionManagement>
 	<!-- Source control information -->
 	<scm>
-		<connection>scm:git:git://github.com/LK-Test-Solutions/OpenTDK.git</connection>
-		<developerConnection>scm:git:ssh://github.com:LK-Test-Solutions/OpenTDK.git</developerConnection>
-		<url>https://github.com/LK-Test-Solutions/OpenTDK/tree/main</url>
+		<connection>scm:git:git://github.com/LK-Test-Solutions/LK-DevKit.git</connection>
+		<developerConnection>scm:git:ssh://github.com:LK-Test-Solutions/LK-DevKit.git</developerConnection>
+		<url>https://github.com/LK-Test-Solutions/LK-DevKit/tree/main</url>
 	</scm>
 	<!-- Build Properties -->
 	<build>
@@ -168,19 +168,6 @@
 			<groupId>com.google.code.gson</groupId>
 			<artifactId>gson</artifactId>
 			<version>2.12.1</version>
-		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>2.0.17</version>
-		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-simple -->
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-simple</artifactId>
-			<version>2.0.17</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.dataformat</groupId>

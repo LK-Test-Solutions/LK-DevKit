@@ -3,6 +3,7 @@ package org.lk.devkit.filter;
 import lombok.Getter;
 import org.lk.devkit.util.DateUtil;
 
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -341,102 +342,110 @@ public class FilterRule {
         if(val.contentEquals("null") || filterValue.contentEquals("null") ) {
             return false;
         }
-
-        switch (filterOperator) {
-            case CONTAINS:
+        return switch (filterOperator) {
+            case CONTAINS -> {
                 if ((ruleFormat == ERuleFormat.QUOTED_REGEX) || (ruleFormat == ERuleFormat.REGEX)) {
-                    return isValidExpression(".*" + filterValue + ".*", val, false);
+                    yield isValidExpression(".*" + filterValue + ".*", val, false);
                 } else {
-                    return val.trim().contains(filterValue);
+                    yield val.trim().contains(filterValue);
                 }
-
-            case CONTAINS_DATE:
-                return DateUtil.findDate(val).filter(s -> DateUtil.compare(s, filterValue) == 0).isPresent();
-
-            case CONTAINS_DATE_AFTER:
-                return DateUtil.findDate(val).filter(s -> DateUtil.compare(s, filterValue) > 0).isPresent();
-
-            case CONTAINS_DATE_BEFORE:
-                return DateUtil.findDate(val).filter(s -> DateUtil.compare(s, filterValue) < 0).isPresent();
-
-            case CONTAINS_IGNORE_CASE:
+            }
+            case CONTAINS_DATE -> {
+                Optional<String> result = DateUtil.findDate(val);
+                if(result.isPresent()) {
+                    yield DateUtil.compare(result.get(), filterValue) == 0;
+                }
+                yield false;
+            }
+            case CONTAINS_DATE_AFTER -> {
+                Optional<String> result = DateUtil.findDate(val);
+                if(result.isPresent()) {
+                    yield DateUtil.compare(result.get(), filterValue) > 0;
+                }
+                yield false;
+            }
+            case CONTAINS_DATE_BEFORE -> {
+                Optional<String> result = DateUtil.findDate(val);
+                if(result.isPresent()) {
+                    yield DateUtil.compare(result.get(), filterValue) < 0;
+                }
+                yield false;
+            }
+            case CONTAINS_IGNORE_CASE -> {
                 if ((ruleFormat.equals(ERuleFormat.QUOTED_REGEX)) || (ruleFormat.equals(ERuleFormat.REGEX))) {
-                    return isValidExpression(".*" + filterValue + ".*", val, true);
+                    yield isValidExpression(".*" + filterValue + ".*", val, true);
                 } else {
-                    return val.trim().toUpperCase().contains(filterValue.toUpperCase());
+                    yield val.trim().toUpperCase().contains(filterValue.toUpperCase());
                 }
-
-            case DATE_AFTER: return DateUtil.compare(val, filterValue) > 0;
-            case DATE_BEFORE: return DateUtil.compare(val, filterValue) < 0;
-            case DATE_EQUALS: return DateUtil.compare(val, filterValue) == 0;
-
-            case ENDS_WITH:
+            }
+            case DATE_AFTER -> DateUtil.compare(val, filterValue) > 0;
+            case DATE_BEFORE -> DateUtil.compare(val, filterValue) < 0;
+            case DATE_EQUALS -> DateUtil.compare(val, filterValue) == 0;
+            case ENDS_WITH -> {
                 if ((ruleFormat.equals(ERuleFormat.QUOTED_REGEX)) || (ruleFormat.equals(ERuleFormat.REGEX))) {
-                    return isValidExpression(".*" + filterValue, val, false);
+                    yield isValidExpression(".*" + filterValue, val, false);
                 } else {
-                    return val.trim().endsWith(filterValue);
+                    yield val.trim().endsWith(filterValue);
                 }
-
-            case ENDS_WITH_IGNORE_CASE :
+            }
+            case ENDS_WITH_IGNORE_CASE -> {
                 if ((ruleFormat.equals(ERuleFormat.QUOTED_REGEX)) || (ruleFormat.equals(ERuleFormat.REGEX))) {
-                    return isValidExpression(".*" + filterValue, val, true);
+                    yield isValidExpression(".*" + filterValue, val, true);
                 } else {
-                    return val.trim().toUpperCase().endsWith(filterValue.toUpperCase());
+                    yield val.trim().toUpperCase().endsWith(filterValue.toUpperCase());
                 }
-
-            case EQUALS:
+            }
+            case EQUALS -> {
                 if ((ruleFormat.equals(ERuleFormat.QUOTED_REGEX)) || (ruleFormat.equals(ERuleFormat.REGEX))) {
-                    return isValidExpression(filterValue, val, false);
+                    yield isValidExpression(filterValue, val, false);
                 } else {
-                    return val.trim().equals(filterValue);
+                    yield val.trim().equals(filterValue);
                 }
-
-            case EQUALS_IGNORE_CASE:
+            }
+            case EQUALS_IGNORE_CASE -> {
                 if ((ruleFormat.equals(ERuleFormat.QUOTED_REGEX)) || (ruleFormat.equals(ERuleFormat.REGEX))) {
-                    return isValidExpression(filterValue, val, true);
+                    yield isValidExpression(filterValue, val, true);
                 } else {
-                    return val.trim().equalsIgnoreCase(filterValue);
+                    yield val.trim().equalsIgnoreCase(filterValue);
                 }
-
-            case GREATER_THAN: return Integer.parseInt(val) > Integer.parseInt(filterValue);
-            case GREATER_OR_EQUAL_THAN: return Integer.parseInt(val) >= Integer.parseInt(filterValue);
-            case LESS_THAN: return Integer.parseInt(val) < Integer.parseInt(filterValue);
-            case LESS_OR_EQUAL_THAN: return Integer.parseInt(val) <= Integer.parseInt(filterValue);
-
-            case NOT_EQUALS:
+            }
+            case GREATER_THAN -> Integer.parseInt(val) > Integer.parseInt(filterValue);
+            case GREATER_OR_EQUAL_THAN -> Integer.parseInt(val) >= Integer.parseInt(filterValue);
+            case LESS_THAN -> Integer.parseInt(val) < Integer.parseInt(filterValue);
+            case LESS_OR_EQUAL_THAN -> Integer.parseInt(val) <= Integer.parseInt(filterValue);
+            case NOT_EQUALS -> {
                 if ((ruleFormat.equals(ERuleFormat.QUOTED_REGEX)) || (ruleFormat.equals(ERuleFormat.REGEX))) {
-                    return !isValidExpression(filterValue, val, false);
+                    yield !isValidExpression(filterValue, val, false);
                 } else {
-                    return !val.trim().equals(filterValue);
+                    yield !val.trim().equals(filterValue);
                 }
-
-            case NOT_EQUALS_IGNORE_CASE:
+            }
+            case NOT_EQUALS_IGNORE_CASE -> {
                 if ((ruleFormat.equals(ERuleFormat.QUOTED_REGEX)) || (ruleFormat.equals(ERuleFormat.REGEX))) {
-                    return !isValidExpression(filterValue, val, true);
+                    yield !isValidExpression(filterValue, val, true);
                 } else {
-                    return !val.trim().equalsIgnoreCase(filterValue);
+                    yield !val.trim().equalsIgnoreCase(filterValue);
                 }
-
-            case STARTS_WITH:
+            }
+            case STARTS_WITH -> {
                 if ((ruleFormat.equals(ERuleFormat.QUOTED_REGEX)) || (ruleFormat.equals(ERuleFormat.REGEX))) {
-                    return isValidExpression(filterValue + ".*", val, false);
+                    yield isValidExpression(filterValue + ".*", val, false);
                 } else {
-                    return val.trim().startsWith(filterValue);
+                    yield val.trim().startsWith(filterValue);
                 }
-
-            case STARTS_WITH_IGNORE_CASE:
+            }
+            case STARTS_WITH_IGNORE_CASE -> {
                 if ((ruleFormat.equals(ERuleFormat.QUOTED_REGEX)) || (ruleFormat.equals(ERuleFormat.REGEX))) {
-                    return isValidExpression(filterValue + ".*", val, true);
+                    yield isValidExpression(filterValue + ".*", val, true);
                 } else {
-                    return val.trim().toUpperCase().startsWith(filterValue.toUpperCase());
+                    yield val.trim().toUpperCase().startsWith(filterValue.toUpperCase());
                 }
-
-            case AND: throw new IllegalArgumentException("AND not supported as comparator");
-            case OR: throw new IllegalArgumentException("OR not supported as comparator");
-            case IN: throw new IllegalArgumentException("IN not supported as comparator");
-            case BETWEEN: throw new IllegalArgumentException("BETWEEN not supported as comparator");
-        }
-        return false;
+            }
+            case AND -> throw new IllegalArgumentException("AND not supported as comparator");
+            case OR -> throw new IllegalArgumentException("OR not supported as comparator");
+            case IN -> throw new IllegalArgumentException("IN not supported as comparator");
+            case BETWEEN -> throw new IllegalArgumentException("BETWEEN not supported as comparator");
+        };
     }
 
     private boolean isValidExpression(String filterValue, String val, boolean ignoreCase) {
